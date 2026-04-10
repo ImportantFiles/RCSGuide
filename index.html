@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RCS Ops Guide</title>
+
+<style>
+:root { --header-h: 84px; }
+
+body {
+  font-family: "Times New Roman", serif;
+  color: #000;
+  margin: 0;
+  background-color: #fff;
+  min-height: 100vh;
+}
+
+/* ✅ Fixed header (auto height so logo never crops) */
+.site-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.98);
+  box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+  padding: 10px 30px;              /* give breathing room */
+  z-index: 9999;
+  overflow: visible;               /* ensure nothing clips */
+}
+
+.site-header a img {
+  display: block;
+  height: auto;
+  width: auto;                     /* let it size naturally */
+  max-height: 110px;               /* keeps header tidy while fully visible */
+}
+
+/* ✅ 3 fixed columns on desktop; new sections auto-wrap BELOW */
+.container {
+  padding: calc(var(--header-h) + 24px) 40px 60px 40px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(280px, 1fr));
+  gap: 30px;
+}
+
+.section {
+  background-color: #fff;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border-radius: 10px;
+  padding: 25px;
+  text-align: center;
+}
+
+.section h2 { color: #007bff; margin-bottom: 15px; }
+
+ul { list-style-type: none; padding: 0; margin: 0; }
+
+.list-item {
+  background-color: #000;
+  color: #fff;
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.list-item:hover { background-color: #dcdcdc; color: #000; }
+
+/* ✅ Highlighted search text */
+.highlight {
+  background-color: yellow;
+  color: #000;
+  font-weight: bold;
+}
+
+@media (max-width: 1024px) {
+  .container { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 700px) {
+  .site-header { flex-direction: column; align-items: stretch; }
+  .search-container { order: 1; margin-bottom: 8px; }
+  .site-header a { order: 2; align-self: center; }
+  .site-header a img { max-height: 72px; }
+  .container { padding: calc(var(--header-h) + 16px) 20px 40px 20px; grid-template-columns: 1fr; }
+}
+
+/* ✅ Search bar */
+.search-container { display: flex; align-items: center; gap: 8px; }
+.search-container input {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 220px;
+  transition: all 0.3s ease;
+}
+.search-container input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 4px rgba(0,123,255,0.4);
+}
+</style>
+</head>
+<body>
+
+<!-- ✅ Header -->
+<header class="site-header" id="siteHeader">
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Search STT topics..." />
+  </div>
+  <a href="https://ridgecapitalsolutions.com" target="_blank" rel="noopener">
+    <img src="https://i.postimg.cc/NjskjGmv/Ridge-White-Logo.png" alt="Ridge Capital Solutions" id="brandLogo" />
+  </a>
+</header>
+
+<div class="container" id="mainContainer">
+
+  <!-- ✅ Column 1: STT Errors -->
+  <div class="section">
+    <h2>STT Errors</h2>
+    <ul>
+      <li class="list-item" data-description="This error message means there is a disconnection between STT and the broker server. This kind of alert can be disregarded since the STT is designed to reconnect automatically.<p><b><i>Email Response</i></b></p><p>This error means that STT is currently unable to connect to the broker’s trade server. When you see “MT Error: 10031 No connection with the trade server”, it indicates that the command that STT just tried, such as opening or closing a trade, could not be processed because there’s no active connection at that moment.</p><p>The platform is designed to automatically retry the command every second. Once the connection is re-established, whether through your internet stabilizing or the broker’s server coming back online, the action will go through without any additional steps from you.</p>">
+        10031 No connection with the trade server
+      </li>
+      <li class="list-item" data-description="This error message means that STT was not able to copy the action from the master for closing a trade. This normally happens if the volume of the order is not suitable for the client's account.<p><b><i>Email Response</i></b></p><p>For this type of error, we can disregard it. According to our developers, this occurs when the follower account’s balance is significantly lower than the master account’s balance. In such cases, the system intelligently skips smaller positions that would otherwise result in negligible profits. These positions are typically too small to be meaningful or cost-effective once transaction costs and slippage are taken into account.</p><p>Skipping these trades helps ensure better efficiency and trading relevance on lower-balance accounts.</p>">
+        close/open volume less than minimum
+      </li>
+      <li class="list-item" data-description="Orders were being skipped because it's not necessary for the client's account size.<p><b><i>Email Response</i></b></p><p>You may notice that certain trades are being skipped. This happens because your account balance is significantly smaller compared to the master account. The system avoids unnecessary micro-lot orders that don’t align with your balance.</p>">
+        skipped trades
+      </li>
+      <li class="list-item" data-description="This happens when the live trading account gets disconnected from the STT itself which might be because of a master password update or broker server change.<p><b><i>Email Response</i></b></p><p>This behavior can sometimes occur if there is ongoing broker maintenance. When this happens, the system should automatically reconnect once the maintenance is complete.
+<p>To confirm everything is working properly, please follow these steps:</p>
+1. Log in to your STT Dashboard and go to Accounts to check if the green checkmark is visible on the left side of the ID number.
+<p>2. Then go to Trade Copiers and make sure the green play button is also showing on the right side of the copier.</p>
+<p>If both indicators are present, your account should be fully operational. If not, please book a meeting using the link below so we can assist you and resolve the issue:(CALENDAR LINK)</p>
+<p>Thank you, and feel free to reach out if you need any further help!
+</p>">
+        Account Disconnection
+      </li>
+      <li class="list-item" data-description="This means the trading server rejected the command to close/open the trade. Common reasons include broker-side restrictions, temporary server delays, or the trade being in a state that prevents it from closing immediately. The system automatically retries every second until it executes.">
+        10006 Request rejected
+      </li>
+      <li class="list-item" data-description="The price difference (slippage) between the master and follower was too large, exceeding the copier’s slippage tolerance. This protects against poor entries during fast moves; the copier retries each second until back within range.">
+        Trade is beyond copier defined slippage settings
+      </li>
+      <li class="list-item" data-link="https://docs.google.com/spreadsheets/d/1nwS45Ie0iIbY2CqO-KTbb-Wttz_xKER1zQRFoO4d_m8/edit?gid=0#gid=0">
+        MT4 Error Codes
+      </li>
+      <li class="list-item" data-link="https://docs.google.com/spreadsheets/d/19owXrMBPdsYOfRaoTmISpGHlPAZDEMIKmDp9SlFKE8c/edit?gid=0#gid=0">
+        MT5 Error Codes
+      </li>
+      <li class="list-item" data-description="This happens because the <i>opposite positions on a single symbol are disabled</i> rule is set for the trading account. For example, if the account has a buy position, then a user cannot open a sell position or place a pending sell order. Ther rule is only applied to acounts with hedging accounting system.<p><b><i>Email Response</i></b></p><p>Hi (client),</p>
+<p>The error you’re seeing — “opposite positions on a single symbol are disabled” — is happening because your R-S15 FIFO account is with a US-based broker (Forex.com).</p>
+<p>Here’s what it means in simple terms:</p>
+  <p>• Your account cannot hold both a buy and a sell position on the same symbol at the same time.</p>
+  <p>• For example, if there’s an open buy on EURGBP, the system cannot open a sell position until that buy is closed.</p>
+  <p>• Pending orders in the opposite direction are also blocked until existing positions are closed.</p>
+  <p>• This is a regulatory requirement for US brokers and cannot be overridden by the system.</p>
+<p>Because of this rule, the Social Trader Tool (STT) will re-attempt the command every minute, but it will only execute once the existing position is closed or reversed.</p>">
+        Error Code 10046
+     </li>
+      <li class="list-item" data-description="The trade didn’t open because the broker couldn’t provide a valid price at the exact moment the order was sent (Error 136: Off Quotes). This usually happens during fast market movement or low liquidity. The system will keep retrying every second, and the trade will only execute once a stable quote is available; otherwise, it may be skipped. This is not an issue with your account or the copier connection.<p><b><i>Email Response</i></b></p><p>The system successfully sent the order, however it was rejected by the broker due to Error Code 136 (Off Quotes). This means that at the moment the trade was placed, the broker could not provide a valid executable price—typically caused by rapid price movement, spread changes, or temporary liquidity conditions.</p>
+      <p> What to expect:</p>
+          <p>•The system will automatically retry the trade once every second.</p>
+          <p>•The trade will execute as soon as a valid quote becomes available and market conditions stabilize.</p>
+          <p>•If the broker continues rejecting quotes due to volatility, the trade may be skipped for that specific entry.</p>
+
+<p>Please note this does not indicate an issue with your account or the copier connection, and no funds were lost from this particular trade attempt.</p>
+
+<p>If you’d like, we can also review your execution settings (such as slippage tolerance and risk parameters) to reduce the likelihood of this occurring during high-volatility periods.</p>">
+        Error Code: 136 / Off quotes
+      </li>
+    </ul>
+  </div>
+
+  <!-- ✅ Column 2: SOPs -->
+  <div class="section">
+    <h2>Standard Operating Procedures (SOPs)</h2>
+    <ul>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1gfckFvNJEdNhNh2IN_q_e-O14aqS6cypy2RB2RTi0lo/edit?tab=t.0">Welcome Email</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1tcXTApfF6Hf9mM5VWOvQLj_xbVfAOcLVKTsQJfV5bow/edit?tab=t.cvjc8mqhx86j">Onboarding Details and Checklist</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1tcXTApfF6Hf9mM5VWOvQLj_xbVfAOcLVKTsQJfV5bow/edit?tab=t.bfreydw4gpsx">Funding Process</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1KayIkPvj-TDkrIWOeF09bKhVm2JSbR7Bs5kYRPYFC04/edit?tab=t.0">Monthly Maintenance (New Client)</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1KayIkPvj-TDkrIWOeF09bKhVm2JSbR7Bs5kYRPYFC04/edit?tab=t.uof2imalasx">Monthly Maintenance (Existing Client)</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1QcE1vpzgwRyNDNDSqtoOnj8VKlheGHGwa_569spq2LA/edit?tab=t.0">First Call Email Reminder</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1QcE1vpzgwRyNDNDSqtoOnj8VKlheGHGwa_569spq2LA/edit?tab=t.3pdfey6i1hbp">Text and Email Meeting Reminders</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1VAZFd0yuZNHarKPutYZTMfb91vFOEpIDemPXgMwMLIg/edit?tab=t.6sg5v8n9gk0">Unresponsive (Pending Onboarding)</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1VAZFd0yuZNHarKPutYZTMfb91vFOEpIDemPXgMwMLIg/edit?tab=t.yyzbawb9yf4t">Not Live - After 15 Days</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1ESSRJkGqMF88ZDW8YXztF9h8RrVNOslDOOBNdwUj72I/edit?tab=t.fl97k7mt9mm0">Email Summary</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1ESSRJkGqMF88ZDW8YXztF9h8RrVNOslDOOBNdwUj72I/edit?tab=t.bvjoqt4ieskg">GHL Notes</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1fGCvIxPcQzil9usQeXCyS06yJIWh92ORH4Zds_ztISM/edit?tab=t.f2vg3y21ixct">Keymaker Profile Creation</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1fGCvIxPcQzil9usQeXCyS06yJIWh92ORH4Zds_ztISM/edit?tab=t.beqadl3ri4gz">Keymaker SOP</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1fGCvIxPcQzil9usQeXCyS06yJIWh92ORH4Zds_ztISM/edit?tab=t.r7z287f1map1">FXblue SOP</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1Fuw8TuPq65sGdOGbM8ooTqfgyDDn5Qnx4QkCswfD3rI/edit?tab=t.0">Refund SOP</li>
+      <li class="list-item" data-link="https://docs.google.com/spreadsheets/d/1ZkUQE4XA3qpMlmUIw11nvAt8ekctwFaZ-4E7Lgsmn6c/edit?pli=1&gid=558077932#gid=558077932">Lead Assignment</li>
+      <li class="list-item" data-link="https://docs.google.com/spreadsheets/d/1IN9QL5-Z97r-FqzEP01CuIW6cFzPKfdRjmPnxqwY9aw/edit?gid=1110318478#gid=1110318478">Not Onboarded</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1acp150DUGysb9ltdCe4FwCudejTw8FqZjNaRu42hW-M/edit?tab=t.0">LLC | SOLO 401k With Brandon</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1tcXTApfF6Hf9mM5VWOvQLj_xbVfAOcLVKTsQJfV5bow/edit?tab=t.t4g09xbxkbe3">IB Links</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1tcXTApfF6Hf9mM5VWOvQLj_xbVfAOcLVKTsQJfV5bow/edit?tab=t.ygtdeqirqn01">IB Link Explanation/Objection</li>
+      <li class="list-item" data-link="https://docs.google.com/document/d/1tcXTApfF6Hf9mM5VWOvQLj_xbVfAOcLVKTsQJfV5bow/edit?tab=t.8w55yogqkcm5">AGT/OX IB Link Email</li>
+    </ul>
+  </div>
+
+  <!-- ✅ Column 3: FAQs -->
+  <div class="section">
+    <h2>Frequently Asked Questions (FAQs)</h2>
+    <ul>
+      <li class="list-item" data-description="<b>Q:</b> What is STT?<br><b>A:</b> STT (Social Trader Tool) is a trade-copying platform that connects master and follower accounts to automatically mirror trades. It allows users to follow expert strategies without manually trading.">What is STT?</li>
+      <li class="list-item" data-description="<b>Q:</b> How does STT work?<br><b>A:</b> STT uses API connections between brokers and accounts. When the master opens or closes a trade, the same action is copied to follower accounts instantly and proportionally.">How does STT work?</li>
+      <li class="list-item" data-description="<b>Q:</b> How do I stop copying trades?<br><b>A:</b> Go to Configurator → Trade Copiers → Green Play Button → Stop Copying New Trades. This stops new trades while existing ones remain managed by the system.">How to stop copying trades?</li>
+      <li class="list-item" data-description="<b>Q:</b> Does STT guarantee profits?<br><b>A:</b> No. STT only automates trade copying. Profitability depends on the master strategy’s performance and market conditions.">Does STT guarantee profits?</li>
+      <li class="list-item" data-description="<b>Q:</b> How can I check if STT is connected?<br><b>A:</b> Log in to your STT dashboard. A green icon under ‘Accounts’ indicates a live connection. Red or gray means disconnected.">How do I check if STT is connected?</li>
+      <li class="list-item" data-description="<b>Q:</b> What happens during broker maintenance?<br><b>A:</b> Temporary disconnections may occur during broker maintenance. STT automatically restores connection once servers are back online.">What happens during broker maintenance?</li>
+      <li class="list-item" data-description="<b>Q:</b> Can I connect multiple brokers?<br><b>A:</b> Yes. STT supports connecting multiple MT4/MT5 brokers as long as they allow API access.">Can I connect multiple brokers?</li>
+      <li class="list-item" data-description="<b>Q:</b> Is STT safe when it comes to account security?<br><b>A:</b> We store MT4/5 credentials encrypted, accessible only through your Social Trader Tools account. Access to servers is SSH-key restricted; support may log in only when you request assistance.">Is STT safe when it comes to account security?</li>
+      <li class="list-item" data-description="
+Q: What is Leverage and Margin?<br>
+A: 
+<h2>What Leverage and Margin Mean</h2>
+Leverage allows traders to borrow money from the broker to open larger positions than their actual balance. 
+For example, with 1:100 leverage, $100 can control a $10,000 trade.<br>
+Margin is the amount of your own money set aside as a security deposit for open trades. 
+Higher leverage means less margin is required, but risk increases because price movements have a stronger impact on your balance.<br><br>
+<h2>How a Margin Call Happens</h2>
+When the market moves against your open trades, your account equity (balance plus profit or loss) drops. 
+As it approaches the margin used, the margin level (Equity ÷ Margin × 100%) decreases. 
+If it falls below the broker’s set threshold (e.g., 100% or 50%), a margin call occurs or positions may be automatically closed.<br>
+
+Example:<br>
+<table>
+  <tr>
+    <th>Balance</th>
+    <th>Leverage</th>
+    <th>Trade Size</th>
+    <th>Margin Used</th>
+    <th>Margin Level</th>
+    <th>Status</th>
+  </tr>
+  <tr>
+    <td>$1,000</td>
+    <td>1:100</td>
+    <td>$50,000</td>
+    <td>$500</td>
+    <td>200%</td>
+    <td>Safe</td>
+  </tr>
+  <tr>
+    <td>Equity: $600</td>
+    <td>1:100</td>
+    <td>$50,000</td>
+    <td>$500</td>
+    <td>120%</td>
+    <td>Getting Close</td>
+  </tr>
+  <tr>
+    <td>Equity: $450</td>
+    <td>1:100</td>
+    <td>$50,000</td>
+    <td>$500</td>
+    <td>90%</td>
+    <td>Margin Call Triggered</td>
+  </tr>
+</table><br>
+
+Formula:<br>
+Margin Level = (Equity ÷ Margin) × 100%<br><br>
+
+In short, leverage magnifies both profits and losses. If open losses become too large, available margin decreases, the margin level drops, and the broker may issue a margin call or close trades automatically.
+">Leverage and Margin</li>
+      <li class="list-item" data-description="<b>Q:</b> What is IRA, ROTH IRA, and 401k?<br><b>A:
+        <p><strong>Traditional IRA</strong> allows individuals to contribute pre-tax income toward investments that can grow tax-deferred until withdrawal. It’s ideal for traders who want to lower taxable income today while compounding untaxed growth until retirement. Withdrawals after age 59½ are taxed as ordinary income.</p>
+        <p><strong>Roth IRA</strong> is designed for long-term, tax-free growth. Contributions are made with after-tax money, and all trading gains—whether from forex, stocks, or other investments—are completely tax-free when withdrawn at retirement. This structure is powerful for active traders who expect higher future income, since all future gains are shielded from taxes.</p>
+        <p><strong>401(k)</strong> accounts are employer-sponsored and also grow tax-deferred. Most 401(k) plans invest in mutual funds, but some include a “brokerage window” that lets employees directly trade stocks or ETFs. When leaving a job, traders often roll their 401(k) into a Self-Directed IRA, unlocking access to forex and alternative assets.</p>">What is IRA, ROTH IRA, and 401k?</li>
+      <li class="list-item" data-description="<b>Q:</b> Using Retirement Accounts in Forex Trading?<br><b>A:</b>
+<h2>IRA • Roth IRA • 401(k)</h2>
+<p>How active traders can build tax-advantaged wealth through self-directed structures.</p>
+
+<p>You can use your retirement accounts — including Traditional IRA, Roth IRA, and 401(k) — to trade forex through a Self-Directed Custodian.
+This allows you to grow trading profits tax-deferred (IRA/401k) or tax-free (Roth IRA) instead of paying annual taxes on each profitable trade.</p>
+<p>If the current IRA custodian does not permit or directly facilitate forex trading, clients need to open a <em>Self-Directed IRA</em> through a specialized custodian that allows alternative assets such as forex, crypto, or futures. The Self-Directed IRA gives you the flexibility to link with an approved forex broker, while keeping all trades and funds inside the IRA structure for IRS compliance. This can be done through their existing custodian, if supported but if not, the client might need to open a new IRA with a custodian that does.</p>
+<h2>Account Comparison for Forex Trading</h2>
+<table>
+<tr><th>Account Type</th><th>Tax Treatment</th><th>Withdrawal Rules</th><th>Forex Eligibility</th><th>Ideal Use</th></tr>
+<tr><td>Traditional IRA</td><td>Contributions are pre-tax → growth is tax-deferred; taxed at withdrawal</td><td>Penalty before 59½</td><td>Yes, with a self-directed custodian</td><td>Long-term traders seeking lower taxable income today</td></tr>
+<tr><td>Roth IRA</td><td>Contributions after-tax → all future growth is tax-free</td><td>Tax-free after 59½</td><td>Yes, self-directed only</td><td>Traders expecting higher income later (maximize future tax-free growth)</td></tr>
+<tr><td>401(k)</td><td>Employer-sponsored, tax-deferred growth</td><td>Penalty before 59½ unless rollover</td><td>Limited: needs to be rolled into a Self-Directed IRA for forex</td><td>Employees rolling over funds for more control</td></tr>
+</table>
+
+<h2>Key Benefits of Using a Retirement Account in Forex Trading</h2>
+<h3>Tax Shield on Trading Profits</h3>
+<p>Forex profits are normally taxed as ordinary income (up to 37% in the U.S.).</p>
+<p>Inside a Traditional IRA or 401(k) → taxes are deferred until retirement.</p>
+<p>Inside a Roth IRA → profits are never taxed when withdrawn correctly.</p>
+
+<p>Example:<br>
+$100,000 account earning 12% annually for 10 years</p>
+<ul>
+<li>Taxable account: ~$233,000 after taxes</li>
+<li>IRA/Roth: ~$310,000 retained (no tax drag)</li>
+</ul>
+
+<h3>Faster Compound Growth</h3>
+<p>By avoiding yearly taxation, gains are fully reinvested — leading to exponential growth over time. Every dollar stays working inside the account until withdrawal.</p>
+
+<h3>Broader Diversification</h3>
+<p>Forex allows exposure to global currencies (USD, EUR, JPY, GBP, etc.), reducing reliance on traditional stocks and bonds.
+This makes the IRA or 401(k) portfolio more resilient to U.S. market downturns.</p>
+
+<h3>Retirement-Focused Risk Management</h3>
+<p>Trading inside a retirement account encourages long-term discipline, controlled leverage, and structured position sizing. Because the funds are protected by retirement restrictions, impulsive withdrawals are less likely.</p>
+
+<h3>Regulatory & Custodial Oversight</h3>
+<p>Assets are held by an IRS-approved custodian under the IRA/401k structure. This provides both asset protection and reporting compliance (Forms 5498, 1099-R, etc.). Funds remain legally distinct from personal assets.</p>
+
+<h2>Important Considerations</h2>
+<table>
+<tr><th>Limitation</th><th>Details</th></tr>
+<tr><td>No personal use</td><td>You cannot personally guarantee loans, use margin from your own funds, or commingle money.</td></tr>
+<tr><td>Margin restrictions</td><td>Some custodians limit or disallow leverage due to IRS debt-financing rules (UBTI).</td></tr>
+<tr><td>Withdrawal penalties</td><td>Withdrawals before 59½ trigger taxes + 10% penalty unless qualified exception.</td></tr>
+<tr><td>Custodian compatibility</td><td>Only self-directed custodians allow forex; major brokerages (Fidelity, Schwab) do not.</td></tr>
+<tr><td>Possible UBTI exposure</td><td>Using borrowed funds inside the IRA may trigger Unrelated Business Taxable Income.</td></tr>
+</table>
+
+<h2>Example Strategy Path</h2>
+<p>Scenario:<br>
+John, age 45, rolls his $150,000 401(k) into a Self-Directed IRA with a custodian that supports forex.
+He opens a trading account titled “Midland Trust Company FBO John Doe IRA #1034921” and connects it to a regulated broker.</p>
+<p>He trades EUR/USD and GBP/USD moderately, earning 10% yearly.
+After 10 years → $389,000 balance, no taxes paid until retirement.<br>
+If done in a taxable account → ~$310,000 after taxes.</p>
+
+<h2>Custodians Commonly Used for Forex Trading IRAs</h2>
+<ul>
+<li>Midland Trust Company — allows Forex & Futures (Self-Directed IRA)</li>
+<li>Equity Trust Company — collaborates with brokers for forex access</li>
+<li>IRA Financial Trust — specializes in alternative assets (crypto, forex, etc.)</li>
+<li>Kingdom Trust — supports global trading structures</li>
+</ul>
+
+<h2>Summary Table</h2>
+<table>
+<tr><th>Benefit</th><th>Traditional IRA</th><th>Roth IRA</th><th>401(k)</th></tr>
+<tr><td>Tax on Growth</td><td>Deferred</td><td>None</td><td>Deferred</td></tr>
+<tr><td>Early Withdrawal Penalty</td><td>Yes</td><td>Yes (before 59½)</td><td>Yes</td></tr>
+<tr><td>Forex Access</td><td>Self-Directed</td><td>Self-Directed</td><td>Via Rollover</td></tr>
+<tr><td>Custodian Required</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+<tr><td>Best For</td><td>Tax Deferral</td><td>Tax-Free Growth</td><td>Employer Rollovers</td></tr>
+<tr><td>Compounding Advantage</td><td>⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐</td></tr>
+</table>
+
+<h2>Bottom Line</h2>
+<p>Trading forex within a retirement account (IRA, Roth IRA, or 401k rollover) lets you:</p>
+<ul>
+<li>Keep all profits growing inside a tax shelter</li>
+<li>Diversify beyond stocks and ETFs</li>
+<li>Legally protect assets</li>
+<li>Build long-term wealth through active global strategies</li>
+</ul>
+
+<p>The key is finding the right custodian and broker pair that fully supports IRA forex accounts.</p>">
+Using Retirement Accounts for Forex Trading
+</li>
+    <li class="list-item"
+      data-description="
+      Q: What are Equity Monitors?<br>
+      A: Equity monitors let you trigger an alert or action when your account reaches a specific equity level, either above or below your current equity. You can choose actions such as sending an email alert, disabling copiers, or closing trades.<br><br>
+
+The page has two tabs:<br>
+      - Active: shows monitors currently running.<br>
+      - Concluded: shows monitors that have triggered or were cancelled. You can create or cancel a monitor, but you cannot edit or delete it.<br><br>
+
+Types of Equity Monitors<br> 
+
+      1. Target Value – Triggers ABOVE your current equity at a specific value.<br>
+      Example: Equity 10,000 → trigger at 11,000.<br>
+
+      2. Target Percentage – Triggers ABOVE your current equity by percentage.<br>
+      Example: Equity 10,000 → 10% increase = 11,000 (enter 110%).<br> 
+
+      3. Protect Value – Triggers BELOW your current equity at a specific value.<br>
+      Example: Equity 10,000 → trigger at 9,000.<br>
+
+      4. Protect Percentage – Triggers BELOW your current equity by percentage.<br>
+      Example: Equity 10,000 → 10% drop = 9,000 (enter 90%).<br><br>
+
+
+There are three actions:<br>
+      - Email alert: Sends an alert when equity level is reached.<br>
+      - Email alert and disable copiers: Sends an alert and disables trade copiers.<br>
+      - Email alert, disable copiers and close trades: Sends an alert, disables copiers, and closes all open trades.">
+      Equity Monitors
+  </li>
+</ul>
+    </ul>
+  </div>
+
+  <!-- ⬇️ Any NEW sections you add will appear below these three columns by default -->
+
+</div>
+
+<script>
+// ✅ Keep content below the header (auto height)
+function syncHeaderOffset() {
+  const header = document.getElementById('siteHeader');
+  if (!header) return;
+  const h = header.offsetHeight;
+  document.documentElement.style.setProperty('--header-h', h + 'px');
+}
+
+window.addEventListener('load', syncHeaderOffset);
+window.addEventListener('resize', syncHeaderOffset);
+
+// ✅ Open link or popup
+document.addEventListener('DOMContentLoaded', () => {
+  // Re-sync after logo loads (in case height changes)
+  const logo = document.getElementById('brandLogo');
+  if (logo) {
+    if (logo.complete) syncHeaderOffset();
+    else logo.addEventListener('load', syncHeaderOffset);
+  }
+
+  document.querySelectorAll('.list-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const link = item.getAttribute('data-link');
+      const description = item.getAttribute('data-description');
+      const title = item.textContent.trim();
+
+      if (link) {
+        window.open(link, '_blank');
+      } else if (description) {
+        const popup = `
+        <!DOCTYPE html>
+        <html lang='en'>
+        <head>
+        <meta charset='UTF-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <title>${title}</title>
+        <style>
+          body { font-family: 'Times New Roman', serif; color: #444; padding: 30px; line-height: 1.6; }
+          h1 { color: #007bff; }
+        </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <p>${description}</p>
+        </body>
+        </html>`;
+        const tab = window.open('', '_blank');
+        tab.document.write(popup);
+        tab.document.close();
+      }
+    });
+  });
+
+  // ✅ Search + highlight
+  const searchInput = document.getElementById('searchInput');
+  const listItems = document.querySelectorAll('.list-item');
+  searchInput.addEventListener('input', () => {
+    const filter = searchInput.value.toLowerCase();
+    listItems.forEach(item => {
+      const text = item.textContent;
+      const lower = text.toLowerCase();
+      if (lower.includes(filter)) {
+        item.style.display = "";
+        if (filter) {
+          const regex = new RegExp(`(${filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+          item.innerHTML = text.replace(regex, "<span class='highlight'>$1</span>");
+        } else {
+          item.innerHTML = text;
+        }
+      } else {
+        item.style.display = "none";
+        item.innerHTML = text;
+      }
+    });
+  });
+});
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
