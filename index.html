@@ -453,18 +453,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <body>
           <h1>${title}</h1>
           <p>${description}</p>
-
-         <!-- ============================================================
-  ASK JHEZEL - AI Chat Widget (Gemini free tier)
-  Paste this whole block right before </body> on any page
-  of your RCS / Velantra Guide website.
-
-  SETUP:
-  1. Replace YOUR_API_KEY_HERE with your Gemini API key
-     (free at aistudio.google.com)
-  2. Fill in JHEZEL_KNOWLEDGE with all docs, SOPs, and logic
-  ============================================================ -->
-
 <style>
   :root {
     --aj-ink: #1c1f26;
@@ -475,7 +463,8 @@ document.addEventListener('DOMContentLoaded', () => {
     --aj-muted: #7a7f8c;
   }
   #aj-launcher {
-    position: fixed; bottom: 24px; right: 24px; z-index: 9998;
+    position: fixed !important; bottom: 24px !important; right: 24px !important;
+    left: auto !important; top: auto !important; z-index: 99998 !important;
     display: flex; align-items: center; gap: 10px;
     background: var(--aj-ink); color: #fff;
     border: none; border-radius: 999px;
@@ -491,7 +480,8 @@ document.addEventListener('DOMContentLoaded', () => {
     border: 1px solid #c9a24b;
   }
   #aj-panel {
-    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    position: fixed !important; bottom: 24px !important; right: 24px !important;
+    left: auto !important; top: auto !important; z-index: 99999 !important;
     width: min(380px, calc(100vw - 32px));
     height: min(560px, calc(100vh - 48px));
     background: var(--aj-panel); border: 1px solid var(--aj-line);
