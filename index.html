@@ -453,6 +453,673 @@ document.addEventListener('DOMContentLoaded', () => {
         <body>
           <h1>${title}</h1>
           <p>${description}</p>
+
+         <!-- ============================================================
+  ASK JHEZEL - AI Chat Widget (Gemini free tier)
+  Paste this whole block right before </body> on any page
+  of your RCS / Velantra Guide website.
+
+  SETUP:
+  1. Replace YOUR_API_KEY_HERE with your Gemini API key
+     (free at aistudio.google.com)
+  2. Fill in JHEZEL_KNOWLEDGE with all docs, SOPs, and logic
+  ============================================================ -->
+
+<style>
+  :root {
+    --aj-ink: #1c1f26;
+    --aj-panel: #ffffff;
+    --aj-accent: #4c5fd5;
+    --aj-accent-soft: #eef0fc;
+    --aj-line: #e4e6ee;
+    --aj-muted: #7a7f8c;
+  }
+  #aj-launcher {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9998;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--aj-ink); color: #fff;
+    border: none; border-radius: 999px;
+    padding: 12px 20px 12px 14px;
+    font: 600 14px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+    cursor: pointer; box-shadow: 0 6px 24px rgba(28,31,38,.28);
+    transition: transform .15s ease;
+  }
+  #aj-launcher:hover { transform: translateY(-2px); }
+  #aj-launcher .aj-launcher-pic {
+    width: 30px; height: 30px; border-radius: 50%;
+    object-fit: cover; flex: none; background: #0d0d0d;
+    border: 1px solid #c9a24b;
+  }
+  #aj-panel {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    width: min(380px, calc(100vw - 32px));
+    height: min(560px, calc(100vh - 48px));
+    background: var(--aj-panel); border: 1px solid var(--aj-line);
+    border-radius: 16px; box-shadow: 0 16px 48px rgba(28,31,38,.22);
+    display: none; flex-direction: column; overflow: hidden;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  #aj-panel.aj-open { display: flex; }
+  .aj-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; background: var(--aj-ink); color: #fff;
+  }
+  .aj-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    object-fit: cover; flex: none; background: #0d0d0d;
+    border: 2px solid #c9a24b;
+  }
+  .aj-head-name { font-size: 14px; font-weight: 700; }
+  .aj-head-sub { font-size: 11.5px; color: #aeb3c2; margin-top: 1px; }
+  .aj-close {
+    margin-left: auto; background: none; border: none;
+    color: #aeb3c2; font-size: 20px; cursor: pointer; line-height: 1;
+    padding: 4px;
+  }
+  .aj-close:hover { color: #fff; }
+  #aj-messages {
+    flex: 1; overflow-y: auto; padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+    background: #f7f8fb;
+  }
+  .aj-msg {
+    max-width: 85%; padding: 10px 13px;
+    font-size: 13.5px; line-height: 1.5;
+    border-radius: 12px; white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .aj-msg.aj-user {
+    align-self: flex-end; background: var(--aj-accent);
+    color: #fff; border-bottom-right-radius: 4px;
+  }
+  .aj-msg.aj-bot {
+    align-self: flex-start; background: var(--aj-panel);
+    color: var(--aj-ink); border: 1px solid var(--aj-line);
+    border-bottom-left-radius: 4px;
+  }
+  .aj-msg.aj-typing { color: var(--aj-muted); font-style: italic; }
+  .aj-inputbar {
+    display: flex; gap: 8px; padding: 12px;
+    border-top: 1px solid var(--aj-line); background: var(--aj-panel);
+  }
+  #aj-input {
+    flex: 1; resize: none; border: 1px solid var(--aj-line);
+    border-radius: 10px; padding: 10px 12px;
+    font: 13.5px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+    outline: none; max-height: 96px;
+  }
+  #aj-input:focus { border-color: var(--aj-accent); }
+  #aj-send {
+    background: var(--aj-accent); color: #fff; border: none;
+    border-radius: 10px; padding: 0 16px; font-size: 14px;
+    font-weight: 600; cursor: pointer; flex: none;
+  }
+  #aj-send:disabled { opacity: .5; cursor: default; }
+  @media (prefers-reduced-motion: reduce) {
+    #aj-launcher { transition: none; }
+  }
+</style>
+
+<button id="aj-launcher" aria-label="Open Ask Jhezel chat">
+  <img class="aj-launcher-pic" src="aibot-avatar.png" alt=""> Ask Jhezel
+</button>
+
+<div id="aj-panel" role="dialog" aria-label="Ask Jhezel chat">
+  <div class="aj-head">
+    <img class="aj-avatar" src="aibot-avatar.png" alt="AI Jhezel avatar">
+    <div>
+      <div class="aj-head-name">Ask Jhezel</div>
+      <div class="aj-head-sub">AI assistant &middot; answers while Jhezel is away</div>
+    </div>
+    <button class="aj-close" id="aj-close" aria-label="Close chat">&times;</button>
+  </div>
+  <div id="aj-messages"></div>
+  <div class="aj-inputbar">
+    <textarea id="aj-input" rows="1" placeholder="Type your question..."></textarea>
+    <button id="aj-send">Send</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ================= CONFIG =================
+  const GEMINI_API_KEY = "AQ.Ab8RN6KuK4mKdSkue-LlpeEV5gQiW-kMgFvZyYid7u_A0opfuQ";
+  const MODEL = "gemini-2.5-flash"; // free tier model
+
+  // Paste ALL of Jhezel's documentation, SOPs, FAQs,
+  // decision logic, and ideas inside the backticks below.
+  const JHEZEL_KNOWLEDGE = `
+==================================================
+SECTION 1: ABOUT RIDGE CAPITAL SOLUTIONS (RCS)
+==================================================
+Ridge Capital Solutions LLC ("Ridge" / "RCS") provides AI-powered trading
+systems (software as a service). Ridge is a technology provider, NOT a fund
+manager and NOT independently regulated by the FCA or SEC. Ridge's role is
+limited to product delivery and client service. Ridge never holds, manages,
+or has withdrawal access to client funds. Clients hold their own accounts
+directly with Ridge-approved regulated brokers (regulated by e.g. FCA in the
+UK, FSCA in South Africa, ASIC in Australia). Ridge only has VIEWING rights
+to account balance, deposit/withdrawal values, and trade history, protected
+by the confidentiality clause in the End User Licensing Agreement (EULA).
+
+Website: ridgecapitalsolutions.com
+Client documentation: docs.ridgecapitalsolutions.com
+Verified live performance: MyFxBook (myfxbook.com/members/ridgecapital)
+
+HOW THE STRATEGY WORKS (high level):
+1. Portfolio Creation - multiple AI-driven strategies combined into a
+   diversified, market-neutral portfolio using advanced portfolio theory.
+2. Data Harvesting - trading data aggregated from 150,000+ live systems
+   across 30+ markets; 300+ indicators per transaction feed deep learning.
+3. Scoring Engine - proprietary scoring using Sharpe, Sortino, Calmar, and
+   Omega ratios; assesses correlation, diversification, recovery factors.
+4. Risk Management - real-time exposure and correlation monitoring to
+   control portfolio VaR; supports leverage from 1:3 to 1:500.
+5. Dynamic Rebalancing - real-time trade reports with context and charts;
+   monitoring via user dashboard and Ridge communication channels.
+6. Portfolio Optimization - monthly review of all subsystems; 250,000+
+   subsystems ranked, top 100 maintained in the portfolio.
+
+==================================================
+SECTION 2: PRODUCTS / SYSTEMS
+==================================================
+Current systems offered: R-10, R-50, R-C30, R-X5, R-X25, and R-A10.
+(Older/other system references that may appear in docs: R-400, R-S15, R-C100.)
+
+Each system uses a unique combination of subsystems, correlations across
+currency pairs, and tailored risk exposure. Some are conservative /
+lower-risk; others are optimized for higher growth with greater risk.
+The right system depends on the client's risk tolerance and objectives;
+the team helps clients choose.
+
+[PLACEHOLDER: PER-SYSTEM DETAILS - for each system (R-10, R-50, R-C30,
+R-X5, R-X25, R-A10) add: target risk profile, recommended minimum balance,
+recommended leverage, drawdown expectations, licensing fee, and who it is
+best suited for.]
+
+SETUP: No VPS or manual EA installation needed. Systems run through
+Social Trader Tools (STT). Setup is simple, fast, and free. R-10 setup
+takes roughly 20-30 minutes and is rated easy.
+
+==================================================
+SECTION 3: STT (SOCIAL TRADER TOOLS) FAQ
+==================================================
+- No daily monitoring required. Recommend a quick weekly check that the
+  account is still connected. STT also sends automated email alerts for
+  any issues on the trading account.
+- Client controls their own account and funds at all times. Only the
+  client can deposit and withdraw.
+
+[PLACEHOLDER: STT FAQ FULL ANSWERS - paste full answers from the RCS Ops
+Guide for: What is STT? How does STT work? How to stop copying trades?
+Does STT guarantee profits? How do I check if STT is connected? What
+happens during broker maintenance? Can I connect multiple brokers? Is STT
+safe when it comes to account security? Leverage and Margin. What is IRA,
+ROTH IRA, and 401k? Using Retirement Accounts for Forex Trading. Equity
+Monitors.]
+
+==================================================
+SECTION 4: STT / MT4 / MT5 ERROR CODES & TROUBLESHOOTING
+==================================================
+[PLACEHOLDER: ERROR CODES - paste from RCS Ops Guide the explanation and
+resolution steps for: 10031 No connection with the trade server;
+close/open volume less than minimum; skipped trades; Account
+Disconnection; 10006 Request rejected; Trade is beyond copier defined
+slippage settings; MT4 error codes; MT5 error codes; Error Code 10046;
+Error Code 136 / Off quotes; Error Code 10027.]
+
+==================================================
+SECTION 5: STANDARD OPERATING PROCEDURES (SOPs)
+==================================================
+[PLACEHOLDER: SOPs - paste from RCS Ops Guide the full procedures for:
+Welcome Email; Onboarding Details and Checklist; Funding Process; Monthly
+Maintenance (New Client); Monthly Maintenance (Existing Client); First
+Call Email Reminder; Text and Email Meeting Reminders; Unresponsive
+(Pending Onboarding); Not Live - After 15 Days; Email Summary; GHL Notes;
+Keymaker Profile Creation; Keymaker SOP; FXblue SOP; Refund SOP; Lead
+Assignment; Not Onboarded; LLC | SOLO 401k With Brandon; IB Links; IB
+Link Explanation/Objection; AGT/OX IB Link Email.]
+
+==================================================
+SECTION 6: SCRIPTS - UNDERPERFORMANCE / UPGRADE / VELANTRA
+==================================================
+--- 6A. RIDGE UPGRADE / MAINTENANCE AND BONUS ACCOUNT SCRIPT ---
+Use when: a Ridge product is underperforming. 4-step flow:
+1. ACKNOWLEDGEMENT: Acknowledge the system has been underperforming in
+   gains for the past quarter. The market has rapidly and drastically
+   evolved over the past 4-5 months; a very different market than the
+   past 10 years, in many ways decades.
+2. REINFORCEMENT: Overall the software has performed extremely well over
+   time. Show an older account as proof (there are proof links per
+   product). Although performance has been down, risk management has been
+   robust; most in the industry lost everything last year. But we
+   acknowledge the client came for both risk management AND returns.
+3. SOLUTION: We were going to reach out anyway. We dedicate ourselves to
+   consistent evolution using Machine Learning, but even ML has limits.
+   Sub-systems that handle trade management must evolve; sometimes they
+   lack the right core intelligence for the current market. The
+   programming team compiled a completely NEW set of sub-systems designed
+   for a very uncertain market. This is a HARD SWITCH: all clients of the
+   affected system transition to the new core infrastructure. The old
+   system continues to control and close ONLY active positions; the new
+   system takes over all new activity. Once fully closed, the old system
+   goes offline for overhaul. The hard upgrade takes about 15 minutes of
+   the client's time.
+4. ADDED VALUE (Velantra offer): Through a B2B partnership with Velantra,
+   clients can effectively multiply trading balance (10x deposit bonus
+   environment: $1,000 deposit = $10,000 trading balance; $2,000 =
+   $20,000). Velantra normally charges a $20K licensing fee + 50%
+   performance fee; for Ridge clients the licensing fee is WAIVED and the
+   performance fee reduced (per current agreed terms). Client only pays
+   based on profits earned. If interested, Ridge passes their info and
+   Velantra's team reaches out.
+
+--- 6B. RCS TO VELANTRA SCRIPT (Performance Update + Diversification) ---
+Flow: (script is a guide; AM can adapt to their call flow)
+- Opening/Transparency: personally reaching out with an account update.
+  Be transparent: the Ridge system hasn't performed at the level
+  consistently delivered over the past two years, largely due to recent
+  market conditions not ideal for the strategy. Developers are actively
+  optimizing the system.
+- Shift to diversification (core message): while improvements are
+  ongoing, the client shouldn't be fully dependent on one underperforming
+  system. Diversification is the key principle; no system performs well
+  in all market conditions.
+- Introduce Velantra: B2B partner. If asked how we know them: close
+  professional relationship with Velantra's founder Josh Fraser; he was
+  previously a Senior Consultant at Ridge before starting his own
+  software company, still uses three Ridge systems.
+- What makes it different: waived license fee for Ridge clients; lower
+  capital requirement; performance-based model (pay only on earned
+  profits); 10x capital mechanism.
+- Definitions: Profit Division = how profits split between client and
+  Velantra (e.g., 70/30 means client keeps 70%). Performance Fee = % that
+  Velantra earns ONLY from generated profits, never from capital (e.g.,
+  30% fee on $10,000 profit = $3,000 to Velantra).
+- Positioning: maintain current Ridge position AND add Velantra as a
+  diversification layer.
+- Soft close: start with a smaller allocation to test alongside current
+  setup. Strong close: lower risk entry, no upfront cost,
+  performance-based alignment.
+- Objection "What happens to my losses?": be transparent - incurred
+  losses can no longer be directly recovered, due to global market events
+  causing unusually high volatility. Ridge performed better over the past
+  14 months than others in the business. Reframe forward: repositioning
+  into right strategies, managing risk, diversification.
+
+--- 6C. VELANTRA SYSTEM OVERVIEW (AM knowledge - NOT for client reading) ---
+- Velantra guide: velantraai.github.io/VelantraGuide/
+- Exclusively integrated with a single broker; all trading activities
+  (execution and copy trading) managed by Global Next Trade (GNT).
+- System minimum funds: TITAN $5,000 = $50,000 trading balance;
+  CENTURION $1,500 = $15,000; IMPERIUM $1,000 = $10,000. Clients may
+  deposit more; these are minimums.
+- 10x Equity Mechanism: up to 10x effective equity vs deposited capital.
+- Compounding: client controls profits; may withdraw or compound. A $500
+  profit compounded = additional $5,000 trading power.
+- Risk framework: dynamic lot sizing, exposure limits, drawdown
+  management, market condition filtering.
+- Performance fees are applied EXCLUSIVELY through unique "offer" links
+  created in the company's main GNT master account. CRITICAL PROCESS:
+  * Do NOT onboard any client without a verified offer link
+  * Always confirm profit split matches agreed terms
+  * Ensure package and deposit alignment
+  * Verify custom sales terms are reflected in the link
+  * Once activated, terms are system-enforced; changes require a NEW
+    offer link (no retroactive adjustments)
+- IB links: TITAN only, or TITAN AND MAVEN: register GNT account with
+  myaccount.gntcapital.com/links/go/568. Client already on Maven adding
+  Titan: submit GNT helpdesk to confirm profile connected to link 568.
+  CENTURION and IMPERIUM: register with
+  myaccount.gntcapital.com/links/go/603.
+
+--- 6D. EMAIL RULES AND TEMPLATES ---
+*** ALL EMAILS WITH AR MUST BE APPROVED BY JHEZEL CLAMOSA BEFORE
+SENDING. *** Templates exist for: Switching to RA10; Switching to RS15;
+Velantra introduction / Refer to Velantra (account update + recovery
+solution format with FXBLUE stats); GNT verification delay response.
+- RA10 switch email key points: recent FX volatility made results
+  conservative; RA10 focuses on market reversals rather than trend
+  continuation, evaluates multiple pairs, uses liquidity flow +
+  confirmation-based entries, selective and patient execution to reduce
+  drawdowns. Verified performance:
+  myfxbook.com/members/ridgecapital/r-a10/11729277. Live client accounts:
+  fxblue.com/users/kshenk-a10, prod.fxblue.com/users/ra10,
+  fxblue.com/users/markra10.
+- RS15 switch email key points: intraday, shorter-term opportunities,
+  adapts as market shifts, cautious around major news events (fewer but
+  higher-quality trades). Performance:
+  myfxbook.com/members/ridgecapital/r-s15/11749507. Live accounts:
+  fxblue.com/users/markrs15, fxblue.com/users/StevoRS15,
+  fxblue.com/users/jschwanrs15.
+- GNT verification delays: verification is handled by GNT (regulatory/
+  compliance). AM should ask the client for any pending GNT requests,
+  review/assist, or escalate to GNT for a status update. After approval,
+  remaining onboarding is straightforward (setup, funding, connection).
+- "Alex reaching out" verification reply: confirm to the client that
+  Alex's email/text is legitimate; she is part of a team providing
+  insights on product diversification; offer to connect them.
+
+==================================================
+SECTION 6.5: OBJECTION HANDLING / CLIENT EXPLANATIONS
+==================================================
+--- DEVELOPERS / AGT PARTNERSHIP ---
+Ridge partners with AGT / QuantLC (do NOT volunteer the company names to
+clients) - a regulated company with a legitimate asset management
+license. AGT manages and transfers trade positions across client
+accounts, ensuring consistent, accurate, transparent execution. AGT
+oversees physical trading servers in the U.S. and London (reliability,
+low latency, regulatory standards). Every Ridge product is proprietary
+and belongs solely to Ridge; not available anywhere else.
+
+--- IB COMMISSIONS ---
+Ridge does NOT earn commissions from client trading activity and does
+not collect broker fees or IB commissions. AGT collects Introducing
+Broker (IB) fees, which fund server infrastructure, compliance, and
+operational stability.
+
+--- CFD / OX SECURITIES / U.S. CLIENTS ---
+Ox Securities operates as an international broker and is not registered
+with the CFTC. Backend uses a CFD execution model but trading centers on
+standard forex pairs with comparable conditions/liquidity. Trustpilot
+withdrawal complaints usually stem from individual account setup,
+banking channels, or compliance, not broker reliability; hundreds of
+clients have deposited and withdrawn successfully. CFDs are restricted
+for U.S.-BASED BROKERS, not for individuals using foreign platforms;
+U.S. residents may legally maintain offshore accounts if they comply
+with tax and reporting rules.
+
+--- R-A10 FIFO vs NON-FIFO ---
+FIFO version will not operate identically to non-FIFO due to regulatory
+requirements (adjusted strategy structure, currency pair connectivity,
+risk controls). Nothing is wrong with the system; differences are
+expected. Non-FIFO option is available if the client prefers.
+
+--- GBPJPY DRAWDOWN CONTEXT (R-C30 etc.) ---
+Perspective matters: a newer account was up 35% on deposit in four
+months. Open GBPJPY positions represented about 3.6% DD on initial
+deposit. Margin-out requires 100% DD. Clients who over-leveraged will be
+paranoid no matter what; responsible deposits should be left alone to
+compound for YEARS. Analyzing trades/news is the developers' and
+algorithms' responsibility, not the client's.
+
+--- RC30 BITCOIN DOUBLE-POSITION ISSUE ---
+On September 10 the central C30 server opened a BTCUSD long for 3
+seconds. Some client accounts (all on OX Securities) opened the position
+TWICE; the duplicate had no corresponding server position so no sell
+signal was ever sent, leaving it open. Client options: 1) close the
+position (realized loss), or 2) hold as a long-term BTC long. The
+position will NOT close automatically; it must be closed manually. Ridge
+is building a monitoring platform to alert if client accounts deviate
+from the master for more than a few minutes.
+
+--- R-A10 AUD/CAD VOLATILITY ---
+Geopolitical events (incl. Venezuela developments affecting oil and the
+Canadian dollar) drove volatility. AUD/CAD approached major resistance
+near 0.98000; preemptive liquidation not prudent; system closes
+positions individually on retracement. A10 risk exposure was reduced;
+10-year back-test max drawdown ~20.1%. Ridge was one of the few firms
+net positive on all products except one for 2025 (vs. major funds'
+losses). Emphasize diversification and prudent account sizing; Ridge
+cannot give personalized sizing advice - refer to a qualified financial
+advisor. Rule of thumb: if exposure causes lost sleep, position size is
+too large.
+
+--- R-A10 EQUITY PROTECTION ---
+RA10 has NO fixed built-in equity protection level; clients control
+their own drawdown allowance. 30% equity protection generally
+recommended for 1:1 risk setting; adjust if risk settings increase.
+
+--- R10 NOT OPENING TRADES ---
+R10 pauses new trades when it reaches 5% drawdown - defensive mode
+prioritizing capital preservation. Risk control mechanism + market
+condition filter. No trades can be a sign the risk filter is working.
+
+--- RS15 HOLDING TRADES OVERNIGHT/DAYS ---
+RS15/Centurion is intraday by design, but may hold positions longer when
+exit conditions are not met, prioritizing protection over forcing an
+early close that locks in losses.
+
+--- FLOATING P/L AND DRAWDOWN (general) ---
+Floating P/L = open positions, NOT realized losses. Strategies actively
+hedge; exposure balanced across positions. Client's drawdown may differ
+from master (trades taken at different balances, balance adjustments,
+old positions, past multiplier usage). Drawdowns can last days or weeks
+- normal. Patience and trust in the process.
+
+--- CORE FAQ ANSWERS (drawdown anxiety) ---
+- Drawdown is not a loss. Systems historically win ~70-80% of positions.
+- All Ridge systems have a -30% equity protector engaged around the
+  clock on the master (at 2X risk that means -60% on the client account
+  - one reason higher risk settings are not recommended). Only one
+  system ever hit that stop (April, Trump tariff announcement).
+- Client's account is always under their control; only they can deposit
+  and withdraw. They can close positions or take profits manually, but
+  doing so can impact strategy performance over time.
+- Changing risk settings only affects FUTURE trades, not open positions.
+- Never trade with money you cannot afford to lose. If losing sleep, the
+  account is over-leveraged. To downsize: withdraw SLOWLY over time, not
+  all at once (a 50% withdrawal doubles current drawdown percentage
+  because open trades were sized on the original balance).
+- No Ridge client account has ever been blown/gone to zero; the -30%
+  equity protector prevents this.
+- AI systems rely on historical statistical analysis (150,000+ data
+  points); they cannot eliminate risk and need market stability to adapt.
+  Results are judged over months and years, not days and weeks.
+- What causes drawdowns: market movements against open positions,
+  influenced by political events, financial news, institutional
+  activity. Small losses (3-4%) are normal and recoverable.
+
+--- VERTUS / "WHY ISN'T THE AI ADAPTING" ---
+The AI analyzes price movements and adjusts positioning over time, but
+consecutive market disruptions have not given it stable conditions to
+adapt. It is intentionally slowing activity and avoiding unnecessary
+entries in high volatility. When the market stabilizes, it can perform
+at potential. AI is adaptive but not perfect and relies on market
+stability.
+
+--- MAVEN (VELANTRA) LIQUIDATION Q&A ---
+- Maven journey concluded after extreme AUD/CAD volatility; drawdowns
+  exceeded historical max levels (running since 2018, but not in a
+  sustained 10x environment). Not a system failure: predefined risk
+  limits were reached; risk containment capped the loss ("you lost 10 -
+  not everything").
+- Maven is a modified grid strategy, NOT Martingale. Master account
+  since 2018 uses the same strategy.
+- Different accounts liquidated differently due to entry timing, balance
+  changes, old positions, past multipliers.
+- Waiting for recovery isn't always efficient; volatility could persist
+  (potentially 2-5 years). 10x structure = defined loss, clean restart,
+  reduced out-of-pocket exposure.
+- 10x is only better with sound financial decisions: it lets a client
+  put 1/10 of capital at risk for the same trading account size and
+  diversify the rest. Using $100K to get a $1M account is NOT the
+  recommended use.
+- Clients can restart immediately (with or without 10x) or transition to
+  True AI systems (different sub-system-level risk management, higher
+  minimum starting balance). No pressure to act immediately.
+
+--- TRUSTPILOT REVIEWS ---
+Encourage HAPPY clients to leave a Trustpilot review. Link:
+go.ridgecapital.io/leavereview. Two soft-ask templates exist (short
+honest ask; longer operations-framed ask).
+Rebuttal for "negative reviews make me hesitant": 500+ active clients,
+only ~5-6 complaints - a very small percentage; even top companies like
+Apple get negative reviews. Then transition to explaining the adaptive
+AI system, current market conditions, protective slowdown, and future
+outlook. Proof of context accounts: fxblue.com/users/ggr50 (R50),
+fxblue.com/users/ggrx25 (RX25), fxblue.com/users/rcs10geaux (R10),
+fxblue.com/users/skiermon (R10), fxblue.com/users/mfakhouri2 (R10),
+fxblue.com/users/doughfprc30 (RC30).
+
+==================================================
+SECTION 7: MONEY-BACK GUARANTEE (PUBLIC POLICY)
+==================================================
+Public policy as stated on the website: Yes, there is a money-back
+guarantee. Conditions: the Ridge team must set up the software (not the
+client doing it themselves), the client turns it on and leaves it running
+UNINTERRUPTED. If the client is not profitable in 30 days, Ridge refunds
+the licensing fee upon request.
+
+IMPORTANT: For any specific refund eligibility question, DO NOT give a
+final eligibility answer. Use the decision checklist below to identify
+what needs to be verified, then instruct the AM to confirm with Jhezel
+before communicating any decision to the client.
+
+==================================================
+SECTION 8: DECISION LOGIC (TO BE COMPLETED BY JHEZEL)
+==================================================
+--- REFUND ELIGIBILITY CHECKLIST ---
+Before answering any refund question, these must ALL be checked:
+1. Contract: What contract/agreement does the client have?
+   [PLACEHOLDER: contract types and their refund terms]
+2. Parameters: Did the client pass/comply with the required parameters?
+   [PLACEHOLDER: list the parameters and pass/fail criteria]
+3. Onboarding date: When was the client onboarded?
+   [PLACEHOLDER: how onboarding date affects the 30-day window]
+4. Refund request date: When did the client request the refund?
+   [PLACEHOLDER: deadline rules relative to onboarding/live date]
+5. Manual intervention: Did the client manually intervene with the
+   account (e.g., closed trades, changed settings, paused copying)?
+   [PLACEHOLDER: what counts as intervention and how it affects
+   eligibility]
+Until this section is completed, respond to refund questions by listing
+the above items that need to be verified and directing the AM to confirm
+final eligibility with Jhezel.
+
+--- OTHER SITUATION LOGIC ---
+[PLACEHOLDER: UNDERPERFORMANCE COMPLAINTS - decision steps]
+[PLACEHOLDER: UPGRADE / BONUS ACCOUNT OFFERS - who qualifies, steps]
+[PLACEHOLDER: UNRESPONSIVE CLIENTS - escalation timeline]
+[PLACEHOLDER: BROKER / IB LINK QUESTIONS - decision steps]
+[PLACEHOLDER: ESCALATION RULES - what must always go to Jhezel or the
+Founders, no matter what]
+`;
+
+  const SYSTEM_PROMPT = `You are "AI Jhezel", the virtual version of Jhezel.
+Account Managers (AMs) and Founders ask you questions when Jhezel is away.
+
+Your behavior:
+- Answer clearly, warmly, and straight to the point, the way Jhezel would.
+- Base ALL answers strictly on the knowledge base below.
+- If the answer is not in the knowledge base, say honestly that you're not sure and advise them to confirm with Jhezel directly. Never invent policies, numbers, or processes.
+- If a section is marked [PLACEHOLDER], that information is not loaded yet. Never guess its contents; say it needs to be confirmed with Jhezel.
+- For refund or eligibility questions: never give a final yes/no. Walk the AM through the refund checklist (contract, parameters, onboarding date, request date, manual intervention) and tell them final eligibility must be confirmed with Jhezel.
+- Some knowledge is INTERNAL ONLY (e.g., Velantra system overview for AMs, partner company names like AGT/QuantLC). When an AM asks, answer fully, but remind them which parts are not for client reading. Remember: all emails with AR must be approved by Jhezel Clamosa before sending.
+- Keep answers concise. Use short paragraphs or short lists.
+- You may respond in English or Taglish, matching how the user writes.
+
+=== KNOWLEDGE BASE ===
+${JHEZEL_KNOWLEDGE}`;
+
+  // ================= WIDGET LOGIC =================
+  const launcher = document.getElementById("aj-launcher");
+  const panel = document.getElementById("aj-panel");
+  const closeBtn = document.getElementById("aj-close");
+  const messagesEl = document.getElementById("aj-messages");
+  const inputEl = document.getElementById("aj-input");
+  const sendBtn = document.getElementById("aj-send");
+
+  // Conversation history (Gemini format)
+  const history = [];
+  let greeted = false;
+
+  function open() {
+    panel.classList.add("aj-open");
+    launcher.style.display = "none";
+    if (!greeted) {
+      addMsg("bot", "Hi! I'm AI Jhezel. Ask me anything about our processes, policies, or how we do things. What do you need help with?");
+      greeted = true;
+    }
+    inputEl.focus();
+  }
+  function close() {
+    panel.classList.remove("aj-open");
+    launcher.style.display = "flex";
+  }
+  launcher.addEventListener("click", open);
+  closeBtn.addEventListener("click", close);
+
+  function addMsg(role, text, typing) {
+    const div = document.createElement("div");
+    div.className = "aj-msg aj-" + (role === "user" ? "user" : "bot") + (typing ? " aj-typing" : "");
+    div.textContent = text;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return div;
+  }
+
+  async function send() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+    inputEl.value = "";
+    inputEl.style.height = "auto";
+    sendBtn.disabled = true;
+
+    addMsg("user", text);
+    history.push({ role: "user", parts: [{ text }] });
+
+    const typingEl = addMsg("bot", "Typing...", true);
+
+    try {
+      const res = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/" +
+          MODEL + ":generateContent?key=" + GEMINI_API_KEY,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: history,
+            generationConfig: { maxOutputTokens: 800, temperature: 0.4 }
+          })
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error && err.error.message ? err.error.message : "Request failed (" + res.status + ")");
+      }
+
+      const data = await res.json();
+      const reply =
+        data.candidates &&
+        data.candidates[0] &&
+        data.candidates[0].content &&
+        data.candidates[0].content.parts
+          ? data.candidates[0].content.parts.map(p => p.text || "").join("")
+          : "Sorry, I couldn't generate a response. Please try again.";
+
+      typingEl.remove();
+      addMsg("bot", reply);
+      history.push({ role: "model", parts: [{ text: reply }] });
+
+      // Keep history from growing forever (keeps last 20 turns)
+      if (history.length > 40) history.splice(0, history.length - 40);
+    } catch (e) {
+      typingEl.remove();
+      addMsg("bot", "Something went wrong: " + e.message + "\n\nCheck that the API key is set correctly, then try again.");
+    } finally {
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+  }
+
+  sendBtn.addEventListener("click", send);
+  inputEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  });
+  inputEl.addEventListener("input", function () {
+    inputEl.style.height = "auto";
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 96) + "px";
+  });
+})();
+</script>
+
+
         </body>
         </html>`;
         const tab = window.open('', '_blank');
