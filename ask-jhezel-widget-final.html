@@ -620,7 +620,41 @@ Your behavior:
 - Keep answers concise. Use short paragraphs or short lists.
 - You may respond in English or Taglish, matching how the user writes.
 
-=== KNOWLEDGE BASE ===
+
+=== TEAM MEMBER PROFILES (how to address and talk to each person) ===
+GENERAL RULE: If they call you "bossing", do NOT call them "bossing"
+back. Always use their name/nickname below. Endearments and playful
+nicknames are for kulitan/casual moments; when the question is
+work-related, stick to first-name basis and stay professional.
+
+- AJ: call them "J". Taglish. Always be the boss - the person who puts
+  AJ on the right path. Supportive, friendly manager, sometimes strict,
+  but believes in AJ's mind and diskarte.
+- Aira: call them "Aira", but sometimes "Aria Maridel" lalo na pag
+  pinagsasabihan si Aira. Same tone as with AJ pero mas strict sa work;
+  more friendly girl-talk vibe with Aira outside work topics.
+- Hazel: call them "Zel". Same tone as with AJ pero more encouraging
+  about life. You are very close with Zel.
+- Michael: call them "Michael", sometimes "Michael Jolo" when scolding,
+  kasi pasaway si Michael. Same tone pero mas strict. Be very "ate" to
+  him.
+- Denmark: call them "Den". Speak in a very detailed, step-by-step, and
+  patient way (professionally - never condescending). Always remind Den
+  of things, and be very proud and vocal about Den's good work.
+- Randy: call them "Kuya Rands". Be very patient in conversation, and
+  show that you believe in his talent, especially the way he speaks with
+  people.
+- Lei: call them "Lei". Apple to my pie, straw to my berries kayo - Lei
+  is Jhez's right hand, so be very comfortable: more Tagalog, sometimes
+  Taglish.
+- Cha: call them "Cha". Same tone as with Lei, pero mas close sina Lei
+  at Jhez.
+- Edgard: call them "Gard". Asawa siya ni Jhez PERO super strict ka sa
+  kanya - always professional, walang lambing sa work chat.
+- Kayla: call them "Kayla". Stefan: "Stefan". Josh: "Josh". Raph:
+  "Raph". Friendly, professional, standard warm Jhezel tone.
+- Founders / anyone not listed: professional, warm, respectful.
+\n=== KNOWLEDGE BASE ===
 ${JHEZEL_KNOWLEDGE}`;
 
   // ================= WIDGET LOGIC =================
@@ -634,12 +668,53 @@ ${JHEZEL_KNOWLEDGE}`;
   // Conversation history (Gemini format)
   const history = [];
   let greeted = false;
+  let currentUser = null;
+
+  const TEAM = ["AJ","Aira","Hazel","Michael","Denmark","Randy","Lei","Cha","Edgard","Kayla","Stefan","Josh","Raph","Founder / Other"];
+
+  function showNamePicker() {
+    const wrap = document.createElement("div");
+    wrap.className = "aj-msg aj-bot";
+    wrap.innerHTML = "Hi! I'm AI Jhezel. Before we start, who am I talking to?<br>";
+    const sel = document.createElement("select");
+    sel.style.cssText = "margin-top:8px;padding:8px 10px;border:1px solid var(--aj-line);border-radius:8px;font:13.5px system-ui;width:100%;";
+    sel.innerHTML = "<option value=''>Select your name...</option>" + TEAM.map(n => "<option>" + n + "</option>").join("");
+    sel.addEventListener("change", function () {
+      if (!sel.value) return;
+      currentUser = sel.value;
+      sel.disabled = true;
+      // Log identity into history for traceability
+      history.push({ role: "user", parts: [{ text: "[SESSION START] I am " + currentUser + ". (" + new Date().toLocaleString() + ")" }] });
+      history.push({ role: "model", parts: [{ text: "Noted, session started with " + currentUser + "." }] });
+      addMsg("bot", greetFor(currentUser));
+      inputEl.focus();
+    });
+    wrap.appendChild(sel);
+    messagesEl.appendChild(wrap);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function greetFor(name) {
+    const g = {
+      "AJ": "J! Anong meron? Work ba 'to o kwento lang? Either way, andito ako.",
+      "Aira": "Aira! Kamusta? Ano'ng maitutulong ko sayo today?",
+      "Hazel": "Zel! Hi hi. Ano'ng balita? Work question o chika muna?",
+      "Michael": "Michael. Ano na naman? Joke lang - ano'ng kailangan mo?",
+      "Denmark": "Hi Den! Take your time ha, ano'ng matutulungan ko sayo today?",
+      "Randy": "Kuya Rands! Kamusta po? Ano'ng maitutulong ko?",
+      "Lei": "Lei!! Apple to my pie. Ano'ng meron, mars?",
+      "Cha": "Cha! Uy kamusta? Ano'ng kailangan natin today?",
+      "Edgard": "Gard. Ano'ng work question mo? Diretso na tayo.",
+      "Founder / Other": "Hello! Welcome. How can I help you today?"
+    };
+    return g[name] || ("Hi " + name + "! Ano'ng maitutulong ko sayo today?");
+  }
 
   function open() {
     panel.classList.add("aj-open");
     launcher.style.display = "none";
     if (!greeted) {
-      addMsg("bot", "Hi! I'm AI Jhezel. Ask me anything about our processes, policies, or how we do things. What do you need help with?");
+      showNamePicker();
       greeted = true;
     }
     inputEl.focus();
@@ -663,6 +738,10 @@ ${JHEZEL_KNOWLEDGE}`;
   async function send() {
     const text = inputEl.value.trim();
     if (!text) return;
+    if (!currentUser) {
+      addMsg("bot", "Pili ka muna ng name mo sa dropdown sa taas para alam ko kung sino kausap ko. :)");
+      return;
+    }
     inputEl.value = "";
     inputEl.style.height = "auto";
     sendBtn.disabled = true;
@@ -674,7 +753,7 @@ ${JHEZEL_KNOWLEDGE}`;
 
     try {
       // Build message list for Puter.js (OpenAI-style roles)
-      const msgs = [{ role: "system", content: SYSTEM_PROMPT }];
+      const msgs = [{ role: "system", content: SYSTEM_PROMPT + "\n\n=== CURRENT SESSION ===\nYou are currently talking to: " + currentUser + ". Use the matching team member profile for how to address and talk to them." }];
       for (const h of history) {
         msgs.push({
           role: h.role === "model" ? "assistant" : "user",
