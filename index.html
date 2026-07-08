@@ -592,8 +592,39 @@ document.addEventListener('DOMContentLoaded', () => {
     font-weight: 600; cursor: pointer; flex: none;
   }
   #aj-send:disabled { opacity: .5; cursor: default; }
+  .aj-chips {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    align-self: flex-start; max-width: 95%;
+  }
+  .aj-chip {
+    background: var(--aj-accent-soft); color: var(--aj-accent);
+    border: 1px solid var(--aj-accent); border-radius: 999px;
+    padding: 7px 14px; font-size: 12.5px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    transition: background .12s ease;
+  }
+  .aj-chip:hover { background: var(--aj-accent); color: #fff; }
   @media (prefers-reduced-motion: reduce) {
     #aj-launcher { transition: none; }
+    .aj-chip { transition: none; }
+  }
+  /* Mobile & small tablets: full-screen chat */
+  @media (max-width: 600px) {
+    #aj-panel {
+      width: 100vw !important; height: 100dvh !important;
+      bottom: 0 !important; right: 0 !important;
+      border-radius: 0 !important; border: none !important;
+    }
+    .aj-head { padding-top: calc(14px + env(safe-area-inset-top)); }
+    .aj-inputbar { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+    #aj-launcher {
+      bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+      right: 16px !important;
+    }
+  }
+  /* Prevent iOS Safari auto-zoom on input focus */
+  @media (max-width: 600px) {
+    #aj-input { font-size: 16px; }
   }
 </style>
 
@@ -1180,6 +1211,14 @@ ${JHEZEL_KNOWLEDGE}`;
       history.push({ role: "user", parts: [{ text: "[SESSION START] I am " + currentUser + ". (" + new Date().toLocaleString() + ")" }] });
       history.push({ role: "model", parts: [{ text: "Noted, session started with " + currentUser + "." }] });
       addMsg("bot", greetFor(currentUser));
+      showChips([
+        "Refund process / eligibility",
+        "STT error troubleshooting",
+        "Client unhappy with performance",
+        "Velantra offer details",
+        "Help me draft a client email",
+        "SOP question"
+      ]);
       inputEl.focus();
     });
     wrap.appendChild(sel);
@@ -1219,6 +1258,31 @@ ${JHEZEL_KNOWLEDGE}`;
   launcher.addEventListener("click", open);
   closeBtn.addEventListener("click", close);
 
+
+  let chipsEl = null;
+  function showChips(options) {
+    removeChips();
+    chipsEl = document.createElement("div");
+    chipsEl.className = "aj-chips";
+    options.forEach(function (label) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "aj-chip";
+      b.textContent = label;
+      b.addEventListener("click", function () {
+        inputEl.value = label;
+        removeChips();
+        send();
+      });
+      chipsEl.appendChild(b);
+    });
+    messagesEl.appendChild(chipsEl);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+  function removeChips() {
+    if (chipsEl) { chipsEl.remove(); chipsEl = null; }
+  }
+
   function addMsg(role, text, typing) {
     const div = document.createElement("div");
     div.className = "aj-msg aj-" + (role === "user" ? "user" : "bot") + (typing ? " aj-typing" : "");
@@ -1231,6 +1295,7 @@ ${JHEZEL_KNOWLEDGE}`;
   async function send() {
     const text = inputEl.value.trim();
     if (!text) return;
+    removeChips();
     if (!currentUser) {
       addMsg("bot", "Please select your name from the dropdown above first so I know who I'm talking to. :)");
       return;
