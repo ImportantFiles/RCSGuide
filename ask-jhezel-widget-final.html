@@ -129,7 +129,7 @@
 <script>
 (function () {
   // ================= CONFIG =================
-  const GEMINI_API_KEY = "AQ.Ab8RN6KuK4mKdSkue-LlpeEV5gQiW-kMgFvZyYid7u_A0opfuQ";
+  const GEMINI_API_KEY = "AQ.Ab8RN6J4a3C8s4oMGq6JFLl5uuWkHicf8rFxewkm1nG3H7_mDw";
   const MODEL = "gemini-2.5-flash"; // free tier model
 
   // Paste ALL of Jhezel's documentation, SOPs, FAQs,
@@ -678,7 +678,7 @@ ${JHEZEL_KNOWLEDGE}`;
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-goog-api-key": GEMINI_API_KEY
+            "x-goog-api-key": AQ.Ab8RN6J4a3C8s4oMGq6JFLl5uuWkHicf8rFxewkm1nG3H7_mDw
           },
           body: JSON.stringify({
             system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
