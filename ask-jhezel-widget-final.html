@@ -126,11 +126,13 @@
   </div>
 </div>
 
+<script src="https://js.puter.com/v2/"></script>
 <script>
 (function () {
   // ================= CONFIG =================
-  const GEMINI_API_KEY = "AQ.Ab8RN6J4a3C8s4oMGq6JFLl5uuWkHicf8rFxewkm1nG3H7_mDw";
-  const MODEL = "gemini-2.5-flash"; // free tier model
+  // Engine: Puter.js (free, no API key needed). To switch back to the
+  // Gemini API later, restore the previous fetch-based call and key.
+  const MODEL = "gemini-2.5-flash"; // model served through Puter.js
 
   // Paste ALL of Jhezel's documentation, SOPs, FAQs,
   // decision logic, and ideas inside the backticks below.
@@ -671,36 +673,25 @@ ${JHEZEL_KNOWLEDGE}`;
     const typingEl = addMsg("bot", "Typing...", true);
 
     try {
-      const res = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/" +
-          MODEL + ":generateContent",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": AQ.Ab8RN6J4a3C8s4oMGq6JFLl5uuWkHicf8rFxewkm1nG3H7_mDw
-          },
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-            contents: history,
-            generationConfig: { maxOutputTokens: 800, temperature: 0.4 }
-          })
-        }
-      );
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error && err.error.message ? err.error.message : "Request failed (" + res.status + ")");
+      // Build message list for Puter.js (OpenAI-style roles)
+      const msgs = [{ role: "system", content: SYSTEM_PROMPT }];
+      for (const h of history) {
+        msgs.push({
+          role: h.role === "model" ? "assistant" : "user",
+          content: h.parts.map(p => p.text || "").join("")
+        });
       }
 
-      const data = await res.json();
-      const reply =
-        data.candidates &&
-        data.candidates[0] &&
-        data.candidates[0].content &&
-        data.candidates[0].content.parts
-          ? data.candidates[0].content.parts.map(p => p.text || "").join("")
-          : "Sorry, I couldn't generate a response. Please try again.";
+      const result = await puter.ai.chat(msgs, { model: MODEL });
+
+      // Extract reply text across possible response shapes
+      let reply = "";
+      if (typeof result === "string") reply = result;
+      else if (result && result.message && typeof result.message.content === "string") reply = result.message.content;
+      else if (result && result.message && Array.isArray(result.message.content)) reply = result.message.content.map(c => c.text || "").join("");
+      else if (result && typeof result.text === "string") reply = result.text;
+      else reply = String(result || "");
+      if (!reply.trim()) reply = "Sorry, I couldn't generate a response. Please try again.";
 
       typingEl.remove();
       addMsg("bot", reply);
