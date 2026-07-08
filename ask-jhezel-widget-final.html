@@ -618,7 +618,9 @@ Your behavior:
 - For refund or eligibility questions: never give a final yes/no. Walk the AM through the refund checklist (contract, parameters, onboarding date, request date, manual intervention) and tell them final eligibility must be confirmed with Jhezel.
 - Some knowledge is INTERNAL ONLY (e.g., Velantra system overview for AMs, partner company names like AGT/QuantLC). When an AM asks, answer fully, but remind them which parts are not for client reading. Remember: all emails with AR must be approved by Jhezel Clamosa before sending.
 - Keep answers concise. Use short paragraphs or short lists.
-- You may respond in English or Taglish, matching how the user writes.
+- LANGUAGE: Default to ENGLISH. Only switch to Taglish/Tagalog if the
+  user writes to you in Taglish/Tagalog first, then mirror their
+  language. If they switch back to English, you switch back too.
 
 
 === TEAM MEMBER PROFILES (how to address and talk to each person) ===
@@ -696,18 +698,18 @@ ${JHEZEL_KNOWLEDGE}`;
 
   function greetFor(name) {
     const g = {
-      "AJ": "J! Anong meron? Work ba 'to o kwento lang? Either way, andito ako.",
-      "Aira": "Aira! Kamusta? Ano'ng maitutulong ko sayo today?",
-      "Hazel": "Zel! Hi hi. Ano'ng balita? Work question o chika muna?",
-      "Michael": "Michael. Ano na naman? Joke lang - ano'ng kailangan mo?",
-      "Denmark": "Hi Den! Take your time ha, ano'ng matutulungan ko sayo today?",
-      "Randy": "Kuya Rands! Kamusta po? Ano'ng maitutulong ko?",
-      "Lei": "Lei!! Apple to my pie. Ano'ng meron, mars?",
-      "Cha": "Cha! Uy kamusta? Ano'ng kailangan natin today?",
-      "Edgard": "Gard. Ano'ng work question mo? Diretso na tayo.",
+      "AJ": "J! What's up? Work question or just checking in? Either way, I'm here.",
+      "Aira": "Aira! How are you? What can I help you with today?",
+      "Hazel": "Zel! Hi hi. How's everything? What do you need today?",
+      "Michael": "Michael. What is it this time? Kidding - what do you need?",
+      "Denmark": "Hi Den! Take your time, what can I help you with today?",
+      "Randy": "Kuya Rands! How are you? What can I do for you today?",
+      "Lei": "Lei!! Apple to my pie. What's up?",
+      "Cha": "Cha! Hey, how are you? What do we need to sort out today?",
+      "Edgard": "Gard. What's your work question? Let's get straight to it.",
       "Founder / Other": "Hello! Welcome. How can I help you today?"
     };
-    return g[name] || ("Hi " + name + "! Ano'ng maitutulong ko sayo today?");
+    return g[name] || ("Hi " + name + "! What can I help you with today?");
   }
 
   function open() {
@@ -739,7 +741,7 @@ ${JHEZEL_KNOWLEDGE}`;
     const text = inputEl.value.trim();
     if (!text) return;
     if (!currentUser) {
-      addMsg("bot", "Pili ka muna ng name mo sa dropdown sa taas para alam ko kung sino kausap ko. :)");
+      addMsg("bot", "Please select your name from the dropdown above first so I know who I'm talking to. :)");
       return;
     }
     inputEl.value = "";
