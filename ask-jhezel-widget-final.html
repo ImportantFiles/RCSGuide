@@ -4,7 +4,7 @@
   of your RCS / Velantra Guide website.
 
   SETUP:
-  1. Replace YOUR_API_KEY_HERE with your Gemini API key
+  1. Replace WORKER_URL with your Cloudflare Worker URL (Groq proxy)
      (free at aistudio.google.com)
   2. Fill in JHEZEL_KNOWLEDGE with all docs, SOPs, and logic
   ============================================================ -->
@@ -157,13 +157,13 @@
   </div>
 </div>
 
-<script src="https://js.puter.com/v2/"></script>
 <script>
 (function () {
   // ================= CONFIG =================
-  // Engine: Puter.js (free, no API key needed). To switch back to the
-  // Gemini API later, restore the previous fetch-based call and key.
-  const MODEL = "gemini-2.5-flash"; // model served through Puter.js
+  // Engine: Cloudflare Worker proxy -> Groq (Llama 3.3 70B).
+  // FREE and NO login needed for users. Paste your Worker URL below.
+  const WORKER_URL = "https://ask-jhezel.jhezelh-files.workers.dev/";
+  const MODEL = "llama-3.3-70b-versatile";
 
   // Paste ALL of Jhezel's documentation, SOPs, FAQs,
   // decision logic, and ideas inside the backticks below.
@@ -819,7 +819,7 @@ ${JHEZEL_KNOWLEDGE}`;
     const typingEl = addMsg("bot", "Typing...", true);
 
     try {
-      // Build message list for Puter.js (OpenAI-style roles)
+      // Build message list (OpenAI-style roles) for the Worker -> Groq
       const msgs = [{ role: "system", content: SYSTEM_PROMPT + "\n\n=== CURRENT SESSION ===\nYou are currently talking to: " + currentUser + ". Use the matching team member profile for how to address and talk to them." }];
       for (const h of history) {
         msgs.push({
@@ -828,13 +828,20 @@ ${JHEZEL_KNOWLEDGE}`;
         });
       }
 
-      const result = await puter.ai.chat(msgs, { model: MODEL });
+      const res = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: MODEL, messages: msgs })
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const result = await res.json();
 
       // Extract reply text across possible response shapes
       let reply = "";
       if (typeof result === "string") reply = result;
+      else if (result && result.choices && result.choices[0] && result.choices[0].message) reply = result.choices[0].message.content || "";
+      else if (result && typeof result.reply === "string") reply = result.reply;
       else if (result && result.message && typeof result.message.content === "string") reply = result.message.content;
-      else if (result && result.message && Array.isArray(result.message.content)) reply = result.message.content.map(c => c.text || "").join("");
       else if (result && typeof result.text === "string") reply = result.text;
       else reply = String(result || "");
       if (!reply.trim()) reply = "Sorry, I couldn't generate a response. Please try again.";
@@ -847,7 +854,7 @@ ${JHEZEL_KNOWLEDGE}`;
       if (history.length > 40) history.splice(0, history.length - 40);
     } catch (e) {
       typingEl.remove();
-      addMsg("bot", "Something went wrong: " + e.message + "\n\nCheck that the API key is set correctly, then try again.");
+      addMsg("bot", "Something went wrong: " + e.message + "\n\nPlease check the internet connection or try again in a moment.");
     } finally {
       sendBtn.disabled = false;
       inputEl.focus();
